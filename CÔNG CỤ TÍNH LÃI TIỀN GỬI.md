@@ -1,3 +1,4 @@
+## CÔNG CỤ TÍNH LÃI TIỀN GỬI
 ```php
 (function($, Drupal) {
   'use strict';
@@ -21,4 +22,51 @@
   };
 
 })(jQuery, Drupal);
+```
+
+## Công thức tính Lãi kép (lãi cộng dồn) Ngắn gọn
+```php
+  public function submitForm(array &$form, FormStateInterface $form_state) {
+    // Todo
+    $soTien = $form_state->getValue('so_tien');
+
+    $str = str_replace( ',', '', $soTien);
+
+    $kyhan = $form_state->getValue('ky_han');
+
+    $laiVaVon = $this->tinhLaiThang($str, $form_state->getValue('lai_suat'), $kyhan);
+
+    \Drupal::messenger()->addMessage('Tiền lãi và vốn là ' . number_format($laiVaVon) . ' VND');
+  }
+  
+  ## Công thức đây nha ngắn gọn
+  public function tinhLaiThang($soTienGuiBanDau, $laiSuat, $kyhan) {
+    return $soTienGuiBanDau * pow(1 + ($laiSuat/100/12), $kyhan);
+  }
+```
+
+## Công thức tính Lãi kép (lãi cộng dồn) sử dụng vòng lắp for
+```php
+  public function submitForm(array &$form, FormStateInterface $form_state) {
+    // Todo
+    $soTien = $form_state->getValue('so_tien');
+
+    $str = str_replace( ',', '', $soTien);
+
+    $kyhan = $form_state->getValue('ky_han');
+
+    $laiVaVon = $this->tinhLaiThang($str, $form_state->getValue('lai_suat'), $kyhan);
+
+    \Drupal::messenger()->addMessage('Tiền lãi và vốn là ' . number_format($laiVaVon) . ' VND');
+  }
+  
+  ## Này sử dụng vòng lặp for nên hơi rối
+  public function tinhLaiThang($soTienGuiBanDau, $laiSuat, $kyhan) {
+    for ($i = 0; $i < $kyhan; $i++) {
+      $tienLai = round($soTienGuiBanDau / 100 * $laiSuat / 12);
+      $tongLaiVaVon = $soTienGuiBanDau + $tienLai;
+      $soTienGuiBanDau = $tongLaiVaVon;
+    }
+    return $soTienGuiBanDau;
+  }
 ```
