@@ -71,7 +71,7 @@
   }
 ```
 
-## Tính lãi suất tháng nào cũng gửi (for)
+## Tính lãi suất tháng nào cũng gửi (for) (C1)
 ```php
   public function submitForm(array &$form, FormStateInterface $form_state) {
     // Todo
@@ -96,4 +96,35 @@
 
     return $tongTien;
   }
+```
+
+## Tính lãi suất tháng nào cũng gửi (for) (C2)
+```php
+  public function submitForm(array &$form, FormStateInterface $form_state) {
+    // Todo
+    $soTien = $form_state->getValue('so_tien');
+
+    $str = str_replace( ',', '', $soTien);
+
+    $kyhan = $form_state->getValue('ky_han');
+
+    $laiVaVon = $this->tinhLaiSuatThangNaoCungGui($str, $form_state->getValue('lai_suat'), $kyhan);
+
+    \Drupal::messenger()->addMessage('Tiền lãi và vốn là ' . number_format($laiVaVon) . ' VND');
+  }
+
+  public function tinhLaiThang($soTienGuiBanDau, $laiSuat, $kyhan) {
+    return $soTienGuiBanDau * pow(1 + ($laiSuat/100/12), $kyhan);
+  }
+
+  public function tinhLaiSuatThangNaoCungGui($soTienGuiMoiThang, $laiSuat, $soThang) {
+    $tongTien = 0;
+    for ($i = 1; $i <= $soThang; $i++) {
+      $temp = $this->tinhLaiThang($soTienGuiMoiThang, $laiSuat, $soThang);
+      $soTienGuiMoiThang * pow(1 + ($laiSuat/100/12), $soThang);
+      $tongTien = $tongTien + $temp;
+    }
+    return $tongTien;
+  }
+}
 ```
