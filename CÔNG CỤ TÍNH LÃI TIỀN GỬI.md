@@ -120,11 +120,66 @@
   public function tinhLaiSuatThangNaoCungGui($soTienGuiMoiThang, $laiSuat, $soThang) {
     $tongTien = 0;
     for ($i = 1; $i <= $soThang; $i++) {
-      $temp = $this->tinhLaiThang($soTienGuiMoiThang, $laiSuat, $soThang);
-      $soTienGuiMoiThang * pow(1 + ($laiSuat/100/12), $soThang);
+      $temp = $this->tinhLaiThang($soTienGuiMoiThang, $laiSuat, $i);
       $tongTien = $tongTien + $temp;
     }
     return $tongTien;
+  }
+}
+```
+
+## Tính lãi suất tiền gửi từ tháng đến năm.
+```php
+  public function submitForm(array &$form, FormStateInterface $form_state) {
+    // Todo
+    $soTien = $form_state->getValue('so_tien');
+
+    $str = str_replace( ',', '', $soTien);
+
+    $kyhan = $form_state->getValue('ky_han');
+
+    $laiVaVon = $this->tinhLaiNam($str, $form_state->getValue('lai_suatt'), $form_state->getValue('lai_suatn'), $kyhan);
+    $lai = $this->laiNam($str, $form_state->getValue('lai_suatt'), $form_state->getValue('lai_suatn'), $kyhan);
+
+    \Drupal::messenger()->addMessage('Tiền lãi và vốn là ' . number_format($laiVaVon) . ' VND');
+    \Drupal::messenger()->addMessage('Tiền lãi là ' . number_format($lai) . ' VND');
+  }
+
+## Tính lãi suất tháng
+  public function tinhLaiThang($soTienGuiBanDau, $laiSuat, $kyhan) {
+    return $soTienGuiBanDau * pow(1 + ($laiSuat/100/12), $kyhan);
+  }
+
+  public function tinhLaiSuatThangNaoCungGui($soTienGuiMoiThang, $laiSuat, $soThang) {
+    $tongTien = 0;
+    for ($i = 1; $i <= $soThang; $i++) {
+      $temp = $this->tinhLaiThang($soTienGuiMoiThang, $laiSuat, $i);
+      $tongTien = $tongTien + $temp;
+    }
+    return $tongTien;
+  }
+## Tính cộng gộp cả lãi và vốn
+  public function tinhLaiNam($soTienGuiMoiThang, $laiSuatThang, $laiSuatNam, $kyhan) {
+    $tongTien = 0;
+    for ($i = 1; $i <= $kyhan; $i++) {
+      $soTienGuiHangNam = $this->tinhLaiSuatThangNaoCungGui($soTienGuiMoiThang, $laiSuatThang, 12);
+      $temp = $soTienGuiHangNam * pow(1 + ($laiSuatNam /100), $i);
+      $tongTien = $tongTien + $temp;
+    }
+
+    return $tongTien;
+  }
+
+## Tính lãi suất
+  public function laiNam($soTienGuiMoiThang, $laiSuatThang, $laiSuatNam, $kyhan) {
+    $lai = 0;
+    for ($i = 1; $i <= $kyhan; $i++) {
+      $soTienGuiHangNam = $this->tinhLaiSuatThangNaoCungGui($soTienGuiMoiThang, $laiSuatThang, 12);
+      $laiVaVon = $soTienGuiHangNam * pow(1 + ($laiSuatNam/100), $i);
+      $lai = $lai + ($laiVaVon - $soTienGuiHangNam);
+    }
+
+    return $lai;
   }
 }
 ```
