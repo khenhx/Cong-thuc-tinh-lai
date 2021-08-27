@@ -183,3 +183,36 @@
   }
 }
 ```
+
+
+## Tính lãi vay ngân hàng để mua nhà
+```php
+  public function submitForm(array &$form, FormStateInterface $form_state) {
+    // Todo
+    $soTien = $form_state->getValue('so_tien');
+
+    $str = str_replace( ',', '', $soTien);
+
+    $kyhan = $form_state->getValue('ky_han');
+
+    $tienlai = $this->tinhLaiNam($str, $form_state->getValue('lai_suat'), $kyhan);
+    $tienlaivavon = $this->soTienTraHangThang($str, $form_state->getValue('lai_suat'), $kyhan);
+
+    \Drupal::messenger()->addMessage('Tiền lãi là ' . number_format($tienlai) . ' VND');
+    \Drupal::messenger()->addMessage('Tiền lãi và vốn phải đóng là ' . number_format($tienlaivavon) . ' VND');
+  }
+## Tiền lãi và vốn phải trả trong một tháng
+  public function soTienTraHangThang($soTienGuiBanDau, $laiSuat, $kyhan) {
+    for ($i = 1; $i <= $kyhan; $i++) {
+      $tienlai = $this->tinhLaiNam($soTienGuiBanDau, $laiSuat, $kyhan);
+      $tienlaivavon = ($tienlai * $kyhan + $soTienGuiBanDau) / 60;
+    }
+    return $tienlaivavon;
+  }
+
+## Tiền lãi trong một năm
+  public function tinhLaiNam($soTienGuiBanDau, $laiSuat, $kyhan) {
+    $tienlai = ($soTienGuiBanDau / 100) * $laiSuat;
+    return $tienlai;
+  }
+```
