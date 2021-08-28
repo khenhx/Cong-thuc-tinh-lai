@@ -216,3 +216,65 @@
     return $tienlai;
   }
 ```
+
+## Tính lãi vay ngân hàng để mua nhà khi có vợ và nhân đôi nguồn thu nhập
+```php
+  /**
+   * {@inheritdoc}
+   */
+  public function submitForm(array &$form, FormStateInterface $form_state) {
+    $soTienGuiHangThangTemp = $form_state->getValue('so_tien_gui_hang_thang');
+    $soTienGuiHangThang = str_replace( ',', '', $soTienGuiHangThangTemp);
+
+    $laiSuatGuiMoiThang = $form_state->getValue('lai_suat_gui_moi_thang');
+
+    $kyHanGui = $form_state->getValue('ky_han_gui');
+
+    $laiSuatGuiMoiNam = $form_state->getValue('lai_suat_gui_moi_nam');
+
+    $bankService = \Drupal::service('personal_finance.bank_services');
+    $tongTienThuNhapCuaVo = 0;
+    if ($form_state->getValue('tinh_trang_hon_nhan') == 'co_vo') {
+      $soTienGuiHangThangCuaVoTemp = $form_state->getValue('thu_nhap_cua_vo');
+      $soTienGuiHangThangCuaVo = str_replace( ',', '', $soTienGuiHangThangCuaVoTemp);
+      $tongTienThuNhapCuaVo = $bankService->tinhLaiNam($soTienGuiHangThangCuaVo, $laiSuatGuiMoiThang, $laiSuatGuiMoiNam, $kyHanGui);
+    }
+
+    $tongSoTienVonVaLai = $bankService->tinhLaiNam($soTienGuiHangThang, $laiSuatGuiMoiThang, $laiSuatGuiMoiNam, $kyHanGui);
+
+    $tongTienCuaVoVaCk = $tongSoTienVonVaLai + $tongTienThuNhapCuaVo;
+
+    $chungCuTemp = $form_state->getValue('chung_cu');
+    $chungCu = str_replace( ',', '', $chungCuTemp);
+
+    $soTienVayMuaChungCu = $chungCu - $tongTienCuaVoVaCk;
+
+    $nhaPhoTemp = $form_state->getValue('nha_pho');
+    $nhaPho = str_replace( ',', '', $nhaPhoTemp);
+
+    $soTienVayMuaNhaPho = $nhaPho - $tongTienCuaVoVaCk;
+
+    $kyHanVay = $form_state->getValue('ky_han_vay');
+
+    $laiSuatVayMoiNam = $form_state->getValue('lai_suat_vay_moi_nam');
+
+    $tienlaiMuaNhaPho = $bankService->tinhLaiVayNam($soTienVayMuaNhaPho, $laiSuatVayMoiNam, $kyHanVay);
+
+    $tongTienLaiVaVonPhaiDong = $bankService->soTienTraHangThang($soTienVayMuaNhaPho, $laiSuatVayMoiNam, $kyHanVay);
+
+    \Drupal::messenger()->addMessage('Tiền lãi khi mua nhà phố là ' . number_format($tienlaiMuaNhaPho) . ' VND');
+    \Drupal::messenger()->addMessage('Tiền lãi và vốn phải đóng khi mua nhà phố là ' . number_format($tongTienLaiVaVonPhaiDong) . ' VND');
+
+    if (($soTienVayMuaChungCu) <= 0) {
+      \Drupal::messenger()->addMessage('Đã đủ tiền mua nhà');
+    }
+    else {
+      $tienlaiMuaNhaChungCu = $bankService->tinhLaiVayNam($soTienVayMuaChungCu, $laiSuatVayMoiNam, $kyHanVay);
+
+      $tongTienLaiVaVonkhiMuaNhaChungCu = $bankService->soTienTraHangThang($soTienVayMuaChungCu, $laiSuatVayMoiNam, $kyHanVay);
+
+      \Drupal::messenger()->addMessage('Tiền lãi khi mua chung cư là ' . number_format($tienlaiMuaNhaChungCu) . ' VND');
+      \Drupal::messenger()->addMessage('Tiền lãi và vốn phải đóng khi mua chung cư là ' . number_format($tongTienLaiVaVonkhiMuaNhaChungCu) . ' VND');
+    }
+  }
+```
